@@ -50,44 +50,35 @@ class SinglyLinkedList(object):
         pass
 
     def __contains__(self, item):
-        # node = SinglyLinkedNode(item, None)
-        found = False
         currentnode = self._head._next
         while currentnode is not None:
             if currentnode._item == item:
-                found = True
+                return True
             currentnode = currentnode._next
-        return found
+        return False
         pass
 
     def remove(self, item):
         currentnode = self._head._next
         previous = self._head
-        currentlen = self._length
 
         if currentnode is None:
-            print "List is already Empty"
-            return self
+            raise ValueError("list.remove(x): x not in list")
 
         elif currentnode._next is None and currentnode._item == item:
             self._head = SinglyLinkedNode()
             self._length -= 1
-            print "Item (" + str(item) + ") removed"
-            print "List is now empty"
             return self
 
         while currentnode is not None:
             if currentnode._item == item:
                 previous._next = currentnode._next
                 self._length -= 1
-                print "Item (" + str(item) + ") removed"
                 return self
             previous = currentnode
             currentnode = currentnode._next
 
-        if currentlen == self._length:
-            print "Item (" + str(item) + ") not found"
-        return self
+        raise ValueError("list.remove(x): x not in list")
         pass
 
     def prepend(self, item):
@@ -95,10 +86,8 @@ class SinglyLinkedList(object):
         currentnode = self._head
         nextnode = currentnode._next
         if currentnode._next is None:
-            # print "Is None"
             currentnode._next = node
         else:
-            # print "Is not none"
             currentnode._next = node
             node._next = nextnode
         self._length += 1
@@ -112,11 +101,15 @@ class SinglyLinkedList(object):
 
 def test():
     list1 = SinglyLinkedList()
-    print list1.prepend(1).prepend(8).prepend(3).prepend(1)
-    list1.remove(1).remove(3).remove(5).remove(8).remove(4)
+    list1.prepend(1).prepend(8).prepend(3).prepend(1)
+    print(list1)
+    list1.remove(1).remove(3).remove(1).remove(8)
     print list1.__contains__(4)
-    print list1
-    pass
+    print(list1.__len__())
+    '''gen = list1.__iter__()
+    for itr in range(0, list1.__len__()):
+        print gen.next()
+    pass'''
 
 if __name__ == '__main__':
     test()
