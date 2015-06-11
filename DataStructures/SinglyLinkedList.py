@@ -44,7 +44,6 @@ class SinglyLinkedList(object):
     def __iter__(self):
         currentnode = self._head
         while currentnode._next is not None:
-            # print "In While"
             yield currentnode._next
             currentnode = currentnode._next
         pass
@@ -102,10 +101,9 @@ class SinglyLinkedList(object):
 def test():
     list1 = SinglyLinkedList()
     list1.prepend(1).prepend(8).prepend(3).prepend(1)
-    print(list1)
-    list1.remove(1).remove(3).remove(1).remove(8)
-    print list1.__contains__(4)
-    print(list1.__len__())
+    print list1.remove(1).remove(3).remove(1).remove(8)
+    print list1.__contains__(8)
+    print list1.__len__()
     '''gen = list1.__iter__()
     for itr in range(0, list1.__len__()):
         print gen.next()
