@@ -1,3 +1,5 @@
+
+
 class _KeyValuePair(object):
 
     def __init__(self, key, value):
@@ -34,16 +36,34 @@ class BinaryTreeNode(object):
         self.right = right
         self.parent = parent
 
+    def __repr__(self):
+        return str(self.data)
+
     def nodeheight(self, node):
         if node is None:
             return 0
-        if node.left and node.right is None:
-            return 0
-        else:
-            max(self.nodeheight(node.left), self.nodeheight(node.right)) + 1
+        return max(node.nodeheight(node.left), node.nodeheight(node.right)) + 1
 
-    def __repr__(self):
-        return str(self.data)
+    def rpostorder(self, node):
+        if node.left:
+            self.rpostorder(node.left)
+        if node.right:
+            self.rpostorder(node.right)
+        print node.data
+
+    def rpreorder(self, node):
+        print node.data
+        if node.left:
+            self.rpreorder(node.left)
+        if node.right:
+            self.rpreorder(node.right)
+
+    def rinorder(self, node):
+        if node.left:
+            self.rinorder(node.left)
+        print node.data
+        if node.right:
+            self.rinorder(node.right)
 
 
 class BinarySearchTree(object):
@@ -51,7 +71,7 @@ class BinarySearchTree(object):
     def __init__(self):
         super(BinarySearchTree, self).__init__()
         self.root = None
-        # TODO initialize
+        self.size = 0
         pass
 
     # @property
@@ -61,7 +81,27 @@ class BinarySearchTree(object):
             return 0
         else:
             return rootnode.nodeheight(rootnode) + 1
-        pass
+
+    def recursive_preorder(self):
+        curnod = self.root
+        if curnod is None:
+            return
+        else:
+            return curnod.rpreorder(curnod)
+
+    def recursive_inorder(self):
+        curnod = self.root
+        if curnod is None:
+            return
+        else:
+            return curnod.rinorder(curnod)
+
+    def recursive_postorder(self):
+        curnod = self.root
+        if curnod is None:
+            return
+        else:
+            return curnod.rpostorder(curnod)
 
     '''
     Iterative inorder walk we require a stack to store elements which we have
@@ -96,7 +136,6 @@ class BinarySearchTree(object):
                 else:
                     return
             rootnode = rootnode.right
-        pass
 
     '''
     Iterative preorder walk we require a stack to store righr and left child
@@ -105,8 +144,8 @@ class BinarySearchTree(object):
     1. We start by adding rootnode to stack. First popping rootnode, yielding
     data and then pushing right and left child on stack as they exist.
 
-    2. The topmost element of stack either left or right node depending rootnode's
-    child goes throught above procedure
+    2. The topmost element of stack either left or right node depending
+    rootnode's child goes throught above procedure
 
     3. This process continues till the last element is poped with no child.
     '''
@@ -123,7 +162,6 @@ class BinarySearchTree(object):
                 stack.append(rootnode.right)
             if rootnode.left:
                 stack.append(rootnode.left)
-        pass
 
     '''
     In postorder we visit the left child of node first then right child of node
@@ -143,7 +181,7 @@ class BinarySearchTree(object):
     1. To know we are travering up the tree from left
         -> When we traverse up left of the tree we need to check the current
            node has right child or not. If it has we append right chid otherwise
-           we pop stack to eliminate fully seen nodes and print current node's 
+           we pop stack to eliminate fully seen nodes and print current node's
            data to fully process the node
     2. To know we are traversing up the tree from right
         -> When we traverse up right of tree we need to only pop the stack as
@@ -186,13 +224,25 @@ class BinarySearchTree(object):
                 stack.pop()
                 yield curnod.data
             prvnod = curnod
-        pass
 
+    '''
+    A helper function to get all items in sorted order from Binary Search Tree
+    as a generator object. For efficiency reason it is better to form a generator
+    object by calling inorder_keys() on BinarySearchTree object.
+    '''
     def items(self):
         keyset = self.inorder_keys()
-        for nodecount in keyset:
-            yield (nodecount.data._key, nodecount.data._value)
-        pass
+        for key in keyset:
+            yield key.data
+
+    '''
+    This function is applicable when we have a _KeyValuePair instead of data 
+    as direct field in class.
+
+    To get the item from BST we start from root node as current node. We move
+    down by replacing the current node i.e.right if key is greater in value
+    than current node value or left othewise. if key is equal to current node
+    then we return the current node otherwise KeyError is raised.
 
     def __getitem__(self, key):
         rootnode = self.root
@@ -201,34 +251,56 @@ class BinarySearchTree(object):
                 return rootnode.data._value
             elif rootnode.data._key > key:
                 rootnode = rootnode.right
-            elif rootnode.data._key < key:
-                rootnode = rootnode.left
-        pass
-
-    def __setitem__(self, data):
-        itr = None
-        rootnode = self.root
-        # data = _KeyValuePair(key, value)
-        intrm = BinaryTreeNode(data, None, None, None)
-        while rootnode is not None:
-            itr = rootnode
-            if intrm.data < rootnode.data:
-                rootnode = rootnode.left
             else:
-                rootnode = rootnode.right
-        intrm.parent = itr
-        if itr is None:
+                rootnode = rootnode.left
+        raise KeyError("no such key: {0!r}".format(key))
+    '''
+
+    '''
+    This method inserts the data in appropriate position. First a object of
+    BinarySearchTree with data is created and we start comparing data with
+    curent node starting from rootnode and moving down.
+
+    It is to be noted that insertion happens at leaf only so we traverse down
+    till we have spotted a position i.e. we swap the current node with node in
+    the direction we move. When we encounter a None while loop breaks.
+
+    We also keep track of previous node by a parent pointer. If this node is
+    None this means BST is empty otherwise we compare the data with parent data
+    and insert accordingly.
+    '''
+    def __setitem__(self, data):
+        parent = None
+        curnod = self.root
+        intrm = BinaryTreeNode(data, None, None, None)
+        while curnod is not None:
+            parent = curnod
+            if intrm.data < curnod.data:
+                curnod = curnod.left
+            else:
+                curnod = curnod.right
+        intrm.parent = parent
+        if parent is None:
             self.root = intrm
-        elif intrm.data < itr.data:
-            itr.left = intrm
+        elif intrm.data < parent.data:
+            parent.left = intrm
         else:
-            itr.right = intrm
-        pass
+            parent.right = intrm
+        self.size += 1
 
     def __delitem__(self, key):
         # TODO
         pass
 
+    '''
+    This method returns true if data/key is present in BinarySearchTree
+    otherwise False.
+
+    What we do is traverse down by comparing the data/key with current node's
+    data/key and updating the curent node with node in which direction we move
+    If we find a match i.e. curnod data/key equal to input data/key we return 
+    True otherwise at end of lopp False is returned.
+    '''
     def __contains__(self, key):
         rootnode = self.root
         while rootnode is not None:
@@ -239,22 +311,13 @@ class BinarySearchTree(object):
             elif rootnode.data._key > key:
                 rootnode = rootnode.left
         return False
-        pass
 
     def __len__(self):
-        nodecount = 0
-        keyset = self.inorder_keys()
-        for nodecount in keyset:
-            nodecount += 1
-        return nodecount
-        pass
+        return self.size
 
     def display(self):
         print "Inorder tree traversal"
-        print 'Inorder:', ','.join(item for item in self.inorder_keys())
-        print "\n" + "Postorder tree traversal"
-        print 'Postorder:', ','.join(item for item in self.inorder_keys())
-        pass
+        print ' '.join(str(item) for item in self.itrerative_inorder())
 
 
 def main():
@@ -262,16 +325,12 @@ def main():
 
 
 def test():
-    keyset = [42, 40, 43, 37, 46, 36, 49]
-    # smallkey = [42, 40, 43]
+    keyset1 = [42, 40, 43, 37, 46, 36, 49]
+    # keyset2 = [42, 37, 46, 40, 43, 36, 49]
     bst = BinarySearchTree()
-    for key in keyset:
+    for key in keyset1:
         bst.__setitem__(key)
-    # print bst.root.data
-    # print bst.root.left.data
-    # print bst.root.right.data
-    for node in bst.itrerative_postorder():
-        print node
+    bst.display()
 
 
 if __name__ == '__main__':
