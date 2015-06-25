@@ -164,13 +164,13 @@ class BinarySearchTree(object):
         curnod = self.root
         while curnod.left:
             curnod = curnod.left
-        return curnod.data
+        return curnod
 
     def max_tree(self):
         curnod = self.root
         while curnod.right:
             curnod = curnod.right
-        return curnod.data
+        return curnod
 
     def recursive_preorder(self):
         curnod = self.root
@@ -351,10 +351,6 @@ class BinarySearchTree(object):
             parent.right = intrm
         self.size += 1
 
-    def __delitem__(self, key):
-        # TODO
-        pass
-
     '''
     This method returns true if data/key is present in BinarySearchTree
     otherwise False.
@@ -370,7 +366,7 @@ class BinarySearchTree(object):
         while currentnode is not None:
             if currentnode.data == key:
                 return True
-            elif currentnode.data < key:
+            elif currentnode.data <= key:
                 currentnode = currentnode.right
             elif currentnode.data > key:
                 currentnode = currentnode.left
@@ -402,11 +398,89 @@ class BinarySearchTree(object):
         while currentnode is not None:
             if currentnode.data == key:
                 return currentnode
-            elif currentnode.data < key:
+            elif currentnode.data <= key:
                 currentnode = currentnode.right
             else:
                 currentnode = currentnode.left
         raise KeyError("no such key: {0!r}".format(key))
+
+    '''
+    First we check wether the node is present in BinarySearchTree or not. For
+    same we call __getitem__(key) or simply [key] on BST instance. This method
+    takes
+
+    Once we have pointer available to the node. We divide the delete operation
+    in three steps
+
+    1. When the node has no child then we simply update the parent node's left
+    or right child depending on node's position as None.
+
+    2. When we have one child we replace the node with its child. To do that
+    we first update child's parent pointer to point node's parent. We also
+    update parent' left or right depending on node's position to child of to
+    be deleted node.
+
+    3.
+    '''
+    def __delitem__(self, key):
+        if isinstance(key, BinaryTreeNode):
+            node = key
+        else:
+            node = self[key]
+        parent = node.parent
+        position = None
+        if parent:
+            if parent.left == node:
+                position = "L"
+            else:
+                position = "R"
+        if node.right and node.left:
+            pass
+        elif node.right:
+            self._delonechild(self, position, parent, node.right)
+        elif node.left:
+            self._delonechild(self, position, parent, node.left)
+        else:
+            self._delnochild(self, position, parent)
+        self.size -= 1
+
+    def _delbothchild(self, position, parent, node):
+        subtree = BinarySearchTree(node.right, 0)
+        swapnode = subtree.min_tree()
+        subtree.__delitem__(swapnode)
+        if position:
+            if position == "L":
+                parent.left = swapnode
+            else:
+                parent.right = swapnode
+        else:
+            self.root = swapnode
+        swapnode.left = node.left
+        swapnode.right = node.right
+        node.left.parent = swapnode
+        node.right.parent = swapnode
+        subtree.root = None
+
+    def _delnochild(self, position, parent):
+        if position:
+            if position == "L":
+                parent.left = None
+            else:
+                parent.right = None
+        else:
+            self.root = None
+
+    def _delonechild(self, position, parent, child):
+        child = None
+        if position:
+            if position == "L":
+                parent.left = child
+            else:
+                parent.right = child
+            child.parent = parent
+        else:
+            self.root = child
+            child.parent = None
 
     def __len__(self):
         return self.size
