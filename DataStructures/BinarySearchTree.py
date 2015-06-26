@@ -1,3 +1,9 @@
+import sys
+
+'''
+Key Value pair class in case implementation requires key-value object
+instead of primitive data type
+'''
 
 
 class _KeyValuePair(object):
@@ -25,6 +31,14 @@ class _KeyValuePair(object):
 
     def __repr__(self):
         return "(" + str(self._key) + ", " + str(self._value) + ")"
+
+
+'''
+BinaryTreeNode Class to store left, right, parent pointers as well
+data field to hold data of primitive type in current implementation.
+The data field can be another pointer field however most methods in
+BinaryTreeNode and BinarySearchTree will also change
+'''
 
 
 class BinaryTreeNode(object):
@@ -86,6 +100,28 @@ class BinaryTreeNode(object):
             self._rinorder(node.right)
 
     '''
+    A helper function to print sub-tree. The None children are represnet with
+    <.> and we proceed inorde traversal. We also encapsulate a node with with
+    braces like starting { and closing } to represent a node is processed.
+
+    The braces help in representing BST in way which is similar to human eye
+    '''
+
+    def printsubtree(self, node):
+        sys.stdout.write("{")
+        if node.left:
+            self.printsubtree(node.left)
+        else:
+            sys.stdout.write(".")
+            sys.stdout.write(node)
+            if node.right:
+                self.printsubtree(node.right)
+            else:
+                sys.stdout.write(".")
+        sys.stdout.write("}")
+        return
+
+    '''
     If a node has right child then we are assured that right branch contains
     successor, now the minimum of right branch will be element bigger than
     node however smaller than all other nodes of branch so we have found node.
@@ -144,15 +180,37 @@ class BinaryTreeNode(object):
         return
 
 
+'''
+BinarySearchTree to store pointer to root node and size field to store
+number of nodes in BinarySearchTree
+'''
+
+
 class BinarySearchTree(object):
 
-    def __init__(self):
+    # __init__ method to initialze the BinarySearchTree object
+    def __init__(self, *args):
         super(BinarySearchTree, self).__init__()
-        self.root = None
-        self.size = 0
-        pass
+        if len(args) == 0:
+            self.root = None
+            self.size = 0
+        else:
+            self.root = args[0]
+            self.size = 1
 
-    # @property
+    '''
+    A helper function to print sub-tree. The None children are represnet with
+    <.> and we proceed inorde traversal. We also encapsulate a node with with
+    braces like starting { and closing } to represent a node is processed.
+
+    The braces help in representing BST in way which is similar to human eye
+    '''
+    def __repr__(self):
+        rootnode = self.root
+        if rootnode is not None:
+            rootnode.printsubtree(rootnode)
+
+    # Caculates height of tree from root. Calls nodeheight on rootnode
     def height(self):
         curnod = self.root
         if curnod is None:
@@ -160,17 +218,32 @@ class BinarySearchTree(object):
         else:
             return curnod.nodeheight(curnod) + 1
 
+    '''
+    Gives back the node with minimum key value in BinarySearchTree. Traverse
+    left of tree till finds None value. Returns the last Non-None value
+    '''
+
     def min_tree(self):
         curnod = self.root
         while curnod.left:
             curnod = curnod.left
         return curnod
 
+    '''
+    Gives back the node with maximum key value in BinarySearchTree. Traverse
+    right of tree till finds None value. Returns the last Non-None value
+    '''
+
     def max_tree(self):
         curnod = self.root
         while curnod.right:
             curnod = curnod.right
         return curnod
+
+    '''
+    Prints the node.data in preorder. Calls helper function _rpreorder on
+    rootnode. Does not give a generator object back
+    '''
 
     def recursive_preorder(self):
         curnod = self.root
@@ -179,12 +252,22 @@ class BinarySearchTree(object):
         else:
             return curnod._rpreorder(curnod)
 
+    '''
+    Prints the node.data in inorder. Calls helper function _rinorder on
+    rootnode. Does not give a generator object back
+    '''
+
     def recursive_inorder(self):
         curnod = self.root
         if curnod is None:
             return
         else:
             return curnod._rinorder(curnod)
+
+    '''
+    Prints the node.data in postorder. Calls helper function _rpostorder on
+    rootnode. Does not give a generator object back
+    '''
 
     def recursive_postorder(self):
         curnod = self.root
@@ -374,8 +457,8 @@ class BinarySearchTree(object):
 
     '''
     A helper function to get all items in sorted order from Binary Search Tree
-    as a generator object. For efficiency reason it is better to form a generator
-    object by calling inorder_keys() on BinarySearchTree object.
+    as a generator object. For efficiency reason it is better to form a
+    generator object by calling inorder_keys() on BinarySearchTree object.
     '''
 
     def items(self):
@@ -420,14 +503,27 @@ class BinarySearchTree(object):
     update parent' left or right depending on node's position to child of to
     be deleted node.
 
-    3.
+    3. when we have two child we find a node to be swaped with node to be
+    deleted. We find the node finding minimum of right sub-tree of node to be
+    deleted. We then swap the min element with the node to be delted by
+    updating left and right child of swapped node as well updating parent
+    pointer of left and right childrent to swap node.
     '''
+
     def __delitem__(self, key):
+        '''
+        Validate input is BinaryTreeNode or othewise assuming the input is key
+        call __getitem__(key) to get pointer for the node to be deleted.
+        '''
         if isinstance(key, BinaryTreeNode):
             node = key
         else:
             node = self[key]
         parent = node.parent
+        '''
+        Check wether the node is left or right child, othewise it is rootnode
+        We set L in case left child, R in case right child otherwise None
+        '''
         position = None
         if parent:
             if parent.left == node:
@@ -435,19 +531,39 @@ class BinarySearchTree(object):
             else:
                 position = "R"
         if node.right and node.left:
-            pass
+            self._delbothchild(position, parent, node)
         elif node.right:
-            self._delonechild(self, position, parent, node.right)
+            self._delonechild(position, parent, node.right)
         elif node.left:
-            self._delonechild(self, position, parent, node.left)
+            self._delonechild(position, parent, node.left)
         else:
-            self._delnochild(self, position, parent)
+            self._delnochild(position, parent)
+        # Decrement the size of BST
         self.size -= 1
+
+    '''
+    In this case our node to be delted has both the children. So to find min
+    of right sub-tree we create a BST tree rooted at node.right. Then we call
+    first min_tree() to swapnode and leter we call delete for swapnode on new
+    BST though we still have pointer to swapnode available for later
+
+    Now we check whether the node to be deleted is left child or right child,
+    accordingly we update parent pointer to swapnode.
+
+    If parent is None means rootnode is to be deleted so we replace root of
+    self. Note that since we maintain the invariant that node with equal value
+    is on right of node so when we find the min of subtree i.e. swapnode we
+    are sure that replacing it as rootnode would not violate the invariant.
+
+    In last step we update the swapnode.right and swapnode.left to be same as
+    node to be deleted. We then update parent pointer of both left and right
+    child to point to swapnode. Lastly we set subtree.root as None.
+    '''
 
     def _delbothchild(self, position, parent, node):
         subtree = BinarySearchTree(node.right, 0)
         swapnode = subtree.min_tree()
-        subtree.__delitem__(swapnode)
+        del subtree[swapnode]
         if position:
             if position == "L":
                 parent.left = swapnode
@@ -457,10 +573,20 @@ class BinarySearchTree(object):
             self.root = swapnode
         swapnode.left = node.left
         swapnode.right = node.right
-        node.left.parent = swapnode
-        node.right.parent = swapnode
+        # Swapnode could be immediate left child of node which got removed.
+        if node.left:
+            node.left.parent = swapnode
+        if node.right:
+            node.right.parent = swapnode
         subtree.root = None
 
+    '''
+    In this case our node to be deleted has no children. We simply check
+    whether the node to be deleted is left child or right child, accordingly
+    we update parent's lefr or right to None. If parent is None then set
+    self.root as None
+
+    '''
     def _delnochild(self, position, parent):
         if position:
             if position == "L":
@@ -470,8 +596,18 @@ class BinarySearchTree(object):
         else:
             self.root = None
 
+    '''
+    In this case our node to be deleted has one children. In this case children
+    replaces the node to be deleted so we have a pointer for the child.
+
+    Wec heck whether the node to be deleted is left child or right child,
+    accordingly we update parent's left or right as None.
+
+    If parent is None then set self.root as child and update child's parent to
+    None
+    '''
+
     def _delonechild(self, position, parent, child):
-        child = None
         if position:
             if position == "L":
                 parent.left = child
@@ -496,19 +632,25 @@ def main():
 
 def test():
     keyset1 = [42, 40, 43, 37, 46, 36, 49]
-    # keyset2 = [42, 37, 46, 40, 43, 36, 49]
+    keyset2 = [42, 37, 46, 40, 43, 36, 49]
     bst = BinarySearchTree()
-    for key in keyset1:
+    for key in keyset2:
         bst.__setitem__(key)
     # bst.recursive_postorder()
     # bst.recursive_preorder()
     # bst.recursive_inorder()
-    node = bst[37]
+    '''node = bst[37]
     print node.successor()
     print node.predecessor()
     print bst.__contains__(34)
     print bst.__contains__(40)
-    print len(bst)
+    print len(bst)'''
+    del bst[37]
+    bst.recursive_inorder()
+    print ""
+    print bst.root
+    # del bst[40]
+    # bst.recursive_inorder()'''
 
 
 if __name__ == '__main__':
